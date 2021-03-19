@@ -1,4 +1,4 @@
-package com.example.phychantcontroller;
+package com.example.phychantcontroller.utils;
 
 import android.content.Context;
 import android.graphics.Point;
@@ -7,7 +7,7 @@ import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.WindowManager;
 
-public class ScreenUtil {
+public class ScreenUtils {
 
     /**
      * 获取屏幕宽度（不包含底部导航栏）

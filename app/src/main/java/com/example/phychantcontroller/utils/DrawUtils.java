@@ -1,9 +1,9 @@
-package com.example.phychantcontroller;
+package com.example.phychantcontroller.utils;
 
 import android.graphics.Canvas;
 import android.graphics.Paint;
 
-public class DrawUtil {
+public class DrawUtils {
 
     public static void drawCrossLine(Canvas canvas, Paint paint, int x, int y) {
         int canvasWidth = canvas.getWidth();

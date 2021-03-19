@@ -1,7 +1,5 @@
 package com.example.phychantcontroller;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.annotation.SuppressLint;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -13,11 +11,15 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceView;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-public class MainActivity extends AppCompatActivity implements View.OnTouchListener {
+import com.example.phychantcontroller.utils.DrawUtils;
+import com.example.phychantcontroller.utils.ScreenUtils;
+import com.example.phychantcontroller.utils.ToastUtils;
+import com.example.phychantcontroller.websocket.WebSocketManager;
+
+public class MainActivity extends BaseActivity implements View.OnTouchListener {
 
     private static final String TAG = "MainActivity";
 
@@ -31,7 +33,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     private SurfaceView mOverlap;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -42,6 +44,14 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         mTvWidth = (TextView) findViewById(R.id.tv_width);
         mOverlap = (SurfaceView) findViewById(R.id.overlap_surface_view);
         init();
+
+        if(!WebSocketManager.getInstance().isServerStarted()) {
+            if (WebSocketManager.getInstance().start()) {
+                ToastUtils.showShortSafe("Web socket started...");
+            } else {
+                ToastUtils.showShortSafe("Web socket error...");
+            }
+        }
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -52,8 +62,8 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         mPaint.setColor(Color.BLUE);
         mPaint.setStrokeWidth(5);
 
-        mTvHeight.setText(String.valueOf(ScreenUtil.getScreenRealHeight(this)));
-        mTvWidth.setText(String.valueOf(ScreenUtil.getScreenRealWidth(this)));
+        mTvHeight.setText(String.valueOf(ScreenUtils.getScreenRealHeight(this)));
+        mTvWidth.setText(String.valueOf(ScreenUtils.getScreenRealWidth(this)));
 
         mRlFullScreen.setOnTouchListener(this);
     }
@@ -70,18 +80,21 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 mTvXCoord.setText(String.valueOf(x));
                 mTvYCoord.setText(String.valueOf(y));
                 drawCrossLine(x, y);
+                sendCoordinate(new Coordinate(x, y));
                 break;
             case MotionEvent.ACTION_MOVE:
                 Log.i(TAG, "moving: (" + x + ", " + y + ")");
                 mTvXCoord.setText(String.valueOf(x));
                 mTvYCoord.setText(String.valueOf(y));
                 drawCrossLine(x, y);
+                sendCoordinate(new Coordinate(x, y));
                 break;
             case MotionEvent.ACTION_UP:
                 Log.i(TAG, "touched up: (" + x + ", " + y + ")");
                 mTvXCoord.setText(String.valueOf(x));
                 mTvYCoord.setText(String.valueOf(y));
                 drawCrossLine(x, y);
+                sendCoordinate(new Coordinate(x, y));
                 break;
         }
         return true;
@@ -91,8 +104,26 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         Canvas canvas = mOverlap.getHolder().lockCanvas();
         canvas.drawColor(0, PorterDuff.Mode.CLEAR);
         canvas.save();
-        DrawUtil.drawCrossLine(canvas, mPaint, x, y);
+        DrawUtils.drawCrossLine(canvas, mPaint, x, y);
         canvas.restore();
         mOverlap.getHolder().unlockCanvasAndPost(canvas);
+    }
+
+    private void sendCoordinate(Coordinate coordinate) {
+        if (WebSocketManager.getInstance().start()) {
+            WebSocketManager.getInstance().sendCoordinate(coordinate);
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        if(WebSocketManager.getInstance().isServerStarted()) {
+            if (WebSocketManager.getInstance().stop()) {
+                ToastUtils.showShortSafe("Web socket stopped...");
+            } else {
+                ToastUtils.showShortSafe("Web socket error...");
+            }
+        }
+        super.onDestroy();
     }
 }
