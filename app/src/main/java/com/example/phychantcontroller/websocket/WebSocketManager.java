@@ -3,6 +3,8 @@ package com.example.phychantcontroller.websocket;
 import android.util.Log;
 
 import com.example.phychantcontroller.Coordinate;
+import com.example.phychantcontroller.utils.ContextUtils;
+import com.example.phychantcontroller.utils.ScreenUtils;
 
 import org.java_websocket.WebSocket;
 import org.json.JSONObject;
@@ -38,15 +40,19 @@ public class WebSocketManager {
     }
 
     public void removeWebSocket(WebSocket socket) {
-        if(!socket.isClosed()) {
+        if(socket != null && !socket.isClosed()) {
             socket.close();
             socket = null;
         }
-        if(!webSocket.isClosed()) {
+        if(webSocket != null && !webSocket.isClosed()) {
             webSocket.close();
             webSocket = null;
         }
         Log.i(TAG, "removeWebSocket");
+    }
+
+    public void onMessage(String message) {
+
     }
 
     public void sendMessage(String message) {
@@ -65,6 +71,8 @@ public class WebSocketManager {
             try {
                 coordinateJSON.put("x", coordinate.getX());
                 coordinateJSON.put("y", coordinate.getY());
+                coordinateJSON.put("height", ScreenUtils.getScreenRealHeight(ContextUtils.getContext()));
+                coordinateJSON.put("width", ScreenUtils.getScreenRealWidth(ContextUtils.getContext()));
                 webSocket.send(coordinateJSON.toString());
                 Log.i(TAG, "message: " + coordinateJSON.toString());
             } catch (Exception e) {

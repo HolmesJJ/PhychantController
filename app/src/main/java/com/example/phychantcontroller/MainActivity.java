@@ -110,7 +110,7 @@ public class MainActivity extends BaseActivity implements View.OnTouchListener {
     }
 
     private void sendCoordinate(Coordinate coordinate) {
-        if (WebSocketManager.getInstance().start()) {
+        if (WebSocketManager.getInstance().isServerStarted()) {
             WebSocketManager.getInstance().sendCoordinate(coordinate);
         }
     }
