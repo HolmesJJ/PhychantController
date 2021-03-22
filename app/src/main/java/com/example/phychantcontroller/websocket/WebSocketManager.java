@@ -16,7 +16,7 @@ public class WebSocketManager {
     private WebSocket webSocket = null;
     private Boolean isStarted = false;
 
-    private JSONObject coordinateJSON = new JSONObject();
+
 
     public WebSocketManager() {
 
@@ -60,21 +60,6 @@ public class WebSocketManager {
             try {
                 webSocket.send(message);
                 Log.i(TAG, "message: " + message);
-            } catch (Exception e) {
-                Log.i(TAG, "Send Exception: " + e);
-            }
-        }
-    }
-
-    public void sendCoordinate(Coordinate coordinate) {
-        if(webSocket != null) {
-            try {
-                coordinateJSON.put("x", coordinate.getX());
-                coordinateJSON.put("y", coordinate.getY());
-                coordinateJSON.put("height", ScreenUtils.getScreenRealHeight(ContextUtils.getContext()));
-                coordinateJSON.put("width", ScreenUtils.getScreenRealWidth(ContextUtils.getContext()));
-                webSocket.send(coordinateJSON.toString());
-                Log.i(TAG, "message: " + coordinateJSON.toString());
             } catch (Exception e) {
                 Log.i(TAG, "Send Exception: " + e);
             }

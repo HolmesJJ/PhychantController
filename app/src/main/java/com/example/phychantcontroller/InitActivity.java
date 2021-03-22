@@ -24,7 +24,11 @@ public class InitActivity extends BaseActivity implements View.OnClickListener {
             android.Manifest.permission.ACCESS_NETWORK_STATE,
             android.Manifest.permission.CHANGE_NETWORK_STATE,
             android.Manifest.permission.ACCESS_WIFI_STATE,
-            android.Manifest.permission.CHANGE_WIFI_STATE
+            android.Manifest.permission.CHANGE_WIFI_STATE,
+            android.Manifest.permission.READ_EXTERNAL_STORAGE,
+            android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            android.Manifest.permission.MODIFY_AUDIO_SETTINGS,
+            android.Manifest.permission.RECORD_AUDIO,
     };
 
     @Override

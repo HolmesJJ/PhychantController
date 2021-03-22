@@ -1,28 +1,46 @@
 package com.example.phychantcontroller;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PixelFormat;
 import android.graphics.PorterDuff;
 import android.os.Bundle;
+import android.speech.RecognizerIntent;
+import android.speech.SpeechRecognizer;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.ViewTreeObserver;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import androidx.annotation.Nullable;
+
 import com.example.phychantcontroller.utils.DrawUtils;
-import com.example.phychantcontroller.utils.ScreenUtils;
 import com.example.phychantcontroller.utils.ToastUtils;
 import com.example.phychantcontroller.websocket.WebSocketManager;
 
-public class MainActivity extends BaseActivity implements View.OnTouchListener {
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+
+public class MainActivity extends BaseActivity implements View.OnTouchListener, View.OnClickListener {
 
     private static final String TAG = "MainActivity";
+    private static final int SPEECH_INPUT = 1;
 
+    private Button btnGreeting;
+    private Button btnHow;
+    private Button btnWhat;
+    private Button btnTTS;
+    private Button btnSend;
+    private EditText mEtText;
     private RelativeLayout mRlFullScreen;
     private TextView mTvXCoord;
     private TextView mTvYCoord;
@@ -32,11 +50,20 @@ public class MainActivity extends BaseActivity implements View.OnTouchListener {
     private Paint mPaint;
     private SurfaceView mOverlap;
 
+    private int touchHeight = 0;
+    private int touchWidth = 0;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        btnGreeting = (Button) findViewById(R.id.btn_greeting);
+        btnHow = (Button) findViewById(R.id.btn_how);
+        btnWhat = (Button) findViewById(R.id.btn_what);
+        btnTTS = (Button) findViewById(R.id.btn_tts);
+        btnSend = (Button) findViewById(R.id.btn_send);
+        mEtText = (EditText) findViewById(R.id.et_text);
         mRlFullScreen = (RelativeLayout) findViewById(R.id.rl_full_screen);
         mTvXCoord = (TextView) findViewById(R.id.tv_x_coord);
         mTvYCoord = (TextView) findViewById(R.id.tv_y_coord);
@@ -56,45 +83,66 @@ public class MainActivity extends BaseActivity implements View.OnTouchListener {
 
     @SuppressLint("ClickableViewAccessibility")
     private void init() {
+        btnGreeting.setOnClickListener(this);
+        btnHow.setOnClickListener(this);
+        btnWhat.setOnClickListener(this);
+        btnTTS.setOnClickListener(this);
+        btnSend.setOnClickListener(this);
         mOverlap.setZOrderOnTop(true);
         mOverlap.getHolder().setFormat(PixelFormat.TRANSLUCENT);
         mPaint = new Paint();
         mPaint.setColor(Color.BLUE);
         mPaint.setStrokeWidth(5);
 
-        mTvHeight.setText(String.valueOf(ScreenUtils.getScreenRealHeight(this)));
-        mTvWidth.setText(String.valueOf(ScreenUtils.getScreenRealWidth(this)));
-
+        mRlFullScreen.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                mRlFullScreen.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                touchHeight = mRlFullScreen.getHeight();
+                touchWidth = mRlFullScreen.getWidth();
+                mTvHeight.setText(String.valueOf(mRlFullScreen.getHeight()));
+                mTvWidth.setText(String.valueOf(mRlFullScreen.getWidth()));
+                ToastUtils.showShortSafe("Initialized successfully...");
+            }
+        });
         mRlFullScreen.setOnTouchListener(this);
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public boolean onTouch(View view, MotionEvent motionEvent) {
 
-        int x = (int) motionEvent.getRawX();
-        int y = (int) motionEvent.getRawY();
+        int id = view.getId();
+        switch (id) {
+            case R.id.rl_full_screen:
+                int x = (int) motionEvent.getRawX();
+                int y = (int) motionEvent.getRawY();
 
-        switch (motionEvent.getAction()) {
-            case MotionEvent.ACTION_DOWN:
-                Log.i(TAG, "touched down: (" + x + ", " + y + ")");
-                mTvXCoord.setText(String.valueOf(x));
-                mTvYCoord.setText(String.valueOf(y));
-                drawCrossLine(x, y);
-                sendCoordinate(new Coordinate(x, y));
+                switch (motionEvent.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        Log.i(TAG, "touched down: (" + x + ", " + y + ")");
+                        mTvXCoord.setText(String.valueOf(x));
+                        mTvYCoord.setText(String.valueOf(y));
+                        drawCrossLine(x, y);
+                        sendCoordinate(new Coordinate(x, y));
+                        break;
+                    case MotionEvent.ACTION_MOVE:
+                        Log.i(TAG, "moving: (" + x + ", " + y + ")");
+                        mTvXCoord.setText(String.valueOf(x));
+                        mTvYCoord.setText(String.valueOf(y));
+                        drawCrossLine(x, y);
+                        sendCoordinate(new Coordinate(x, y));
+                        break;
+                    case MotionEvent.ACTION_UP:
+                        Log.i(TAG, "touched up: (" + x + ", " + y + ")");
+                        mTvXCoord.setText(String.valueOf(x));
+                        mTvYCoord.setText(String.valueOf(y));
+                        drawCrossLine(x, y);
+                        sendCoordinate(new Coordinate(x, y));
+                        break;
+                }
                 break;
-            case MotionEvent.ACTION_MOVE:
-                Log.i(TAG, "moving: (" + x + ", " + y + ")");
-                mTvXCoord.setText(String.valueOf(x));
-                mTvYCoord.setText(String.valueOf(y));
-                drawCrossLine(x, y);
-                sendCoordinate(new Coordinate(x, y));
-                break;
-            case MotionEvent.ACTION_UP:
-                Log.i(TAG, "touched up: (" + x + ", " + y + ")");
-                mTvXCoord.setText(String.valueOf(x));
-                mTvYCoord.setText(String.valueOf(y));
-                drawCrossLine(x, y);
-                sendCoordinate(new Coordinate(x, y));
+            default:
                 break;
         }
         return true;
@@ -110,8 +158,57 @@ public class MainActivity extends BaseActivity implements View.OnTouchListener {
     }
 
     private void sendCoordinate(Coordinate coordinate) {
-        if (WebSocketManager.getInstance().isServerStarted()) {
-            WebSocketManager.getInstance().sendCoordinate(coordinate);
+        JSONObject messageJSON = new JSONObject();
+        JSONObject coordinateJSON = new JSONObject();
+        try {
+            messageJSON.put("id", 1);
+            coordinateJSON.put("x", coordinate.getX());
+            coordinateJSON.put("y", coordinate.getY());
+            coordinateJSON.put("height", touchHeight);
+            coordinateJSON.put("width", touchWidth);
+            messageJSON.put("content", coordinateJSON);
+            if (WebSocketManager.getInstance().isServerStarted()) {
+                WebSocketManager.getInstance().sendMessage(messageJSON.toString());
+            }
+        } catch (Exception e) {
+            Log.i(TAG, "Send Exception: " + e);
+        }
+    }
+
+    private void sendGreeting() {
+        JSONObject messageJSON = new JSONObject();
+        try {
+            messageJSON.put("id", 2);
+            if (WebSocketManager.getInstance().isServerStarted()) {
+                WebSocketManager.getInstance().sendMessage(messageJSON.toString());
+            }
+        } catch (Exception e) {
+            Log.i(TAG, "Send Exception: " + e);
+        }
+    }
+
+    private void sendQNA(String message) {
+        JSONObject messageJSON = new JSONObject();
+        try {
+            messageJSON.put("id", 3);
+            messageJSON.put("content", message);
+            if (WebSocketManager.getInstance().isServerStarted()) {
+                WebSocketManager.getInstance().sendMessage(messageJSON.toString());
+            }
+        } catch (Exception e) {
+            Log.i(TAG, "Send Exception: " + e);
+        }
+    }
+
+    private void speak() {
+        Intent mSpeechRecognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en_us");
+        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Hi speak something...");
+        try {
+            startActivityForResult(mSpeechRecognizerIntent, SPEECH_INPUT);
+        } catch (Exception e) {
+            ToastUtils.showShortSafe(e.getMessage());
         }
     }
 
@@ -125,5 +222,50 @@ public class MainActivity extends BaseActivity implements View.OnTouchListener {
             }
         }
         super.onDestroy();
+    }
+
+    @Override
+    public void onClick(View view) {
+        int id = view.getId();
+        switch (id) {
+            case R.id.btn_greeting:
+                sendGreeting();
+                ToastUtils.showShortSafe("Greeting");
+                break;
+            case R.id.btn_how:
+                sendQNA("Hi, how are you");
+                ToastUtils.showShortSafe("Hi, how are you");
+                break;
+            case R.id.btn_what:
+                sendQNA("Hi, what are you doing");
+                ToastUtils.showShortSafe("Hi, what are you doing");
+                break;
+            case R.id.btn_tts:
+                ToastUtils.showShortSafe("Speaking...");
+                speak();
+                break;
+            case R.id.btn_send:
+                ToastUtils.showShortSafe(mEtText.getText());
+                break;
+            default:
+                break;
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode) {
+            case SPEECH_INPUT:
+                if (resultCode == RESULT_OK && data != null) {
+                    ArrayList<String> results = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                    if (results != null && results.size() > 0) {
+                        ToastUtils.showShortSafe(results.get(0));
+                    }
+                }
+                break;
+            default:
+                break;
+        }
     }
 }

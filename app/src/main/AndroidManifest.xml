@@ -7,6 +7,10 @@
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
     <application
         android:allowBackup="true"
@@ -17,6 +21,18 @@
         android:theme="@style/AppTheme.NoActionBar"
         android:usesCleartextTraffic="true"
         android:requestLegacyExternalStorage="true">
+
+        <!-- STT 必须要在这里定义，name不能改，STT的库会调用这里的信息 -->
+        <meta-data
+            android:name="com.baidu.speech.APP_ID"
+            android:value="22653715"/>
+        <meta-data
+            android:name="com.baidu.speech.API_KEY"
+            android:value="sbrxWRBGwvrnykshP1WfkYpc"/>
+        <meta-data
+            android:name="com.baidu.speech.SECRET_KEY"
+            android:value="LxUCc1H667mlvuA5HHHNlGGBB3OM1gvI"/>
+
         <activity android:name=".MainActivity"></activity>
         <activity android:name=".InitActivity">
             <intent-filter>
