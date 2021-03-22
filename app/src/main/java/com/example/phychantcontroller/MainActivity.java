@@ -9,7 +9,6 @@ import android.graphics.PixelFormat;
 import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
-import android.speech.SpeechRecognizer;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceView;
@@ -34,12 +33,18 @@ public class MainActivity extends BaseActivity implements View.OnTouchListener, 
 
     private static final String TAG = "MainActivity";
     private static final int SPEECH_INPUT = 1;
+    private static final int EYE_CONTROL_ID = 1;
+    private static final int GREETING_ID = 2;
+    private static final int QNA_ID = 3;
+    private static final int MUSCLE_CONTROL_ID = 4;
 
     private Button btnGreeting;
     private Button btnHow;
     private Button btnWhat;
     private Button btnTTS;
     private Button btnSend;
+    private Button btnLeft;
+    private Button btnRight;
     private EditText mEtText;
     private RelativeLayout mRlFullScreen;
     private TextView mTvXCoord;
@@ -63,6 +68,8 @@ public class MainActivity extends BaseActivity implements View.OnTouchListener, 
         btnWhat = (Button) findViewById(R.id.btn_what);
         btnTTS = (Button) findViewById(R.id.btn_tts);
         btnSend = (Button) findViewById(R.id.btn_send);
+        btnLeft = (Button) findViewById(R.id.btn_left);
+        btnRight = (Button) findViewById(R.id.btn_right);
         mEtText = (EditText) findViewById(R.id.et_text);
         mRlFullScreen = (RelativeLayout) findViewById(R.id.rl_full_screen);
         mTvXCoord = (TextView) findViewById(R.id.tv_x_coord);
@@ -88,6 +95,8 @@ public class MainActivity extends BaseActivity implements View.OnTouchListener, 
         btnWhat.setOnClickListener(this);
         btnTTS.setOnClickListener(this);
         btnSend.setOnClickListener(this);
+        btnLeft.setOnClickListener(this);
+        btnRight.setOnClickListener(this);
         mOverlap.setZOrderOnTop(true);
         mOverlap.getHolder().setFormat(PixelFormat.TRANSLUCENT);
         mPaint = new Paint();
@@ -159,14 +168,14 @@ public class MainActivity extends BaseActivity implements View.OnTouchListener, 
 
     private void sendCoordinate(Coordinate coordinate) {
         JSONObject messageJSON = new JSONObject();
-        JSONObject coordinateJSON = new JSONObject();
+        JSONObject contentJSON = new JSONObject();
         try {
-            messageJSON.put("id", 1);
-            coordinateJSON.put("x", coordinate.getX());
-            coordinateJSON.put("y", coordinate.getY());
-            coordinateJSON.put("height", touchHeight);
-            coordinateJSON.put("width", touchWidth);
-            messageJSON.put("content", coordinateJSON);
+            messageJSON.put("id", EYE_CONTROL_ID);
+            contentJSON.put("x", coordinate.getX());
+            contentJSON.put("y", coordinate.getY());
+            contentJSON.put("height", touchHeight);
+            contentJSON.put("width", touchWidth);
+            messageJSON.put("coordinate", contentJSON);
             if (WebSocketManager.getInstance().isServerStarted()) {
                 WebSocketManager.getInstance().sendMessage(messageJSON.toString());
             }
@@ -178,7 +187,7 @@ public class MainActivity extends BaseActivity implements View.OnTouchListener, 
     private void sendGreeting() {
         JSONObject messageJSON = new JSONObject();
         try {
-            messageJSON.put("id", 2);
+            messageJSON.put("id", GREETING_ID);
             if (WebSocketManager.getInstance().isServerStarted()) {
                 WebSocketManager.getInstance().sendMessage(messageJSON.toString());
             }
@@ -187,11 +196,32 @@ public class MainActivity extends BaseActivity implements View.OnTouchListener, 
         }
     }
 
-    private void sendQNA(String message) {
+    private void sendQNA(String qna) {
         JSONObject messageJSON = new JSONObject();
+        JSONObject contentJSON = new JSONObject();
         try {
-            messageJSON.put("id", 3);
-            messageJSON.put("content", message);
+            messageJSON.put("id", QNA_ID);
+            contentJSON.put("qna", qna);
+            messageJSON.put("content", contentJSON);
+            if (WebSocketManager.getInstance().isServerStarted()) {
+                WebSocketManager.getInstance().sendMessage(messageJSON.toString());
+            }
+        } catch (Exception e) {
+            Log.i(TAG, "Send Exception: " + e);
+        }
+    }
+
+    private void sendMuscle(boolean isLeft) {
+        JSONObject messageJSON = new JSONObject();
+        JSONObject contentJSON = new JSONObject();
+        try {
+            messageJSON.put("id", MUSCLE_CONTROL_ID);
+            if (isLeft) {
+                contentJSON.put("muscle", true);
+            } else {
+                contentJSON.put("muscle", false);
+            }
+            messageJSON.put("content", contentJSON);
             if (WebSocketManager.getInstance().isServerStarted()) {
                 WebSocketManager.getInstance().sendMessage(messageJSON.toString());
             }
@@ -245,7 +275,19 @@ public class MainActivity extends BaseActivity implements View.OnTouchListener, 
                 speak();
                 break;
             case R.id.btn_send:
-                ToastUtils.showShortSafe(mEtText.getText());
+                if (mEtText.getText() != null) {
+                    sendQNA(mEtText.getText().toString());
+                    ToastUtils.showShortSafe(mEtText.getText().toString());
+                    mEtText.setText("");
+                }
+                break;
+            case R.id.btn_left:
+                sendMuscle(true);
+                ToastUtils.showShortSafe("Left");
+                break;
+            case R.id.btn_right:
+                sendMuscle(false);
+                ToastUtils.showShortSafe("Right");
                 break;
             default:
                 break;
@@ -260,6 +302,7 @@ public class MainActivity extends BaseActivity implements View.OnTouchListener, 
                 if (resultCode == RESULT_OK && data != null) {
                     ArrayList<String> results = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
                     if (results != null && results.size() > 0) {
+                        sendQNA(results.get(0));
                         ToastUtils.showShortSafe(results.get(0));
                     }
                 }

@@ -162,7 +162,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_alignParentBottom="true">
+        android:layout_above="@+id/ll_muscle_container">
 
         <EditText
             android:id="@+id/et_text"
@@ -176,6 +176,30 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Send"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/ll_muscle_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_alignParentBottom="true">
+
+        <Button
+            android:id="@+id/btn_left"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Left"/>
+
+        <Button
+            android:id="@+id/btn_right"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Right"/>
+
     </LinearLayout>
 
 </RelativeLayout>
