@@ -194,6 +194,13 @@
             android:text="Left"/>
 
         <Button
+            android:id="@+id/btn_both"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Both"/>
+
+        <Button
             android:id="@+id/btn_right"
             android:layout_width="0dp"
             android:layout_height="wrap_content"

@@ -38,6 +38,11 @@ public class MainActivity extends BaseActivity implements View.OnTouchListener, 
     private static final int QNA_ID = 3;
     private static final int MUSCLE_CONTROL_ID = 4;
 
+
+    private static final int MUSCLE_CONTROL_LEFT_ID = 1;
+    private static final int MUSCLE_CONTROL_RIGHT_ID = 2;
+    private static final int MUSCLE_CONTROL_BOTH_ID = 3;
+
     private Button btnGreeting;
     private Button btnHow;
     private Button btnWhat;
@@ -45,6 +50,7 @@ public class MainActivity extends BaseActivity implements View.OnTouchListener, 
     private Button btnSend;
     private Button btnLeft;
     private Button btnRight;
+    private Button btnBoth;
     private EditText mEtText;
     private RelativeLayout mRlFullScreen;
     private TextView mTvXCoord;
@@ -70,6 +76,7 @@ public class MainActivity extends BaseActivity implements View.OnTouchListener, 
         btnSend = (Button) findViewById(R.id.btn_send);
         btnLeft = (Button) findViewById(R.id.btn_left);
         btnRight = (Button) findViewById(R.id.btn_right);
+        btnBoth = (Button) findViewById(R.id.btn_both);
         mEtText = (EditText) findViewById(R.id.et_text);
         mRlFullScreen = (RelativeLayout) findViewById(R.id.rl_full_screen);
         mTvXCoord = (TextView) findViewById(R.id.tv_x_coord);
@@ -97,6 +104,7 @@ public class MainActivity extends BaseActivity implements View.OnTouchListener, 
         btnSend.setOnClickListener(this);
         btnLeft.setOnClickListener(this);
         btnRight.setOnClickListener(this);
+        btnBoth.setOnClickListener(this);
         mOverlap.setZOrderOnTop(true);
         mOverlap.getHolder().setFormat(PixelFormat.TRANSLUCENT);
         mPaint = new Paint();
@@ -211,16 +219,12 @@ public class MainActivity extends BaseActivity implements View.OnTouchListener, 
         }
     }
 
-    private void sendMuscle(boolean isLeft) {
+    private void sendMuscle(int action) {
         JSONObject messageJSON = new JSONObject();
         JSONObject contentJSON = new JSONObject();
         try {
             messageJSON.put("id", MUSCLE_CONTROL_ID);
-            if (isLeft) {
-                contentJSON.put("muscle", true);
-            } else {
-                contentJSON.put("muscle", false);
-            }
+            contentJSON.put("muscle", action);
             messageJSON.put("content", contentJSON);
             if (WebSocketManager.getInstance().isServerStarted()) {
                 WebSocketManager.getInstance().sendMessage(messageJSON.toString());
@@ -282,12 +286,16 @@ public class MainActivity extends BaseActivity implements View.OnTouchListener, 
                 }
                 break;
             case R.id.btn_left:
-                sendMuscle(true);
+                sendMuscle(MUSCLE_CONTROL_LEFT_ID);
                 ToastUtils.showShortSafe("Left");
                 break;
             case R.id.btn_right:
-                sendMuscle(false);
+                sendMuscle(MUSCLE_CONTROL_RIGHT_ID);
                 ToastUtils.showShortSafe("Right");
+                break;
+            case R.id.btn_both:
+                sendMuscle(MUSCLE_CONTROL_BOTH_ID);
+                ToastUtils.showShortSafe("Both");
                 break;
             default:
                 break;
